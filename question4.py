@@ -5,6 +5,7 @@ from collections import defaultdict
 import time
 import collections
 import logging
+from itertools import izip
 
 """
 Usage:
@@ -21,34 +22,24 @@ def init_t(source_corpus, foreign_corpus):
     foreign = file(foreign_corpus, "r")
     unique_f = len(set(w.lower() for w in open(foreign_corpus).read().split()))
     t = collections.defaultdict(dict)
-    f_line = foreign.readline().strip()
-    e_line = source.readline().strip()
-    while e_line:
-        e_set = set(e_line.split(" "))
+    for e_line, f_line in izip(open(source_corpus), open(foreign_corpus)):
+        e_set = set(e_line.strip().split(" "))
         e_set.add("NULL")
         for e in e_set:
-            for f in set(f_line.split(" ")):
+            for f in set(f_line.strip().split(" ")):
                 # t(f|e) is given by 1 over unique foreign words + 1 (NULL)
                 t[e][f] = 1/float(unique_f + 1)
-        e_line = source.readline().strip()
-        f_line = foreign.readline().strip()
-    source.close()
-    foreign.close()
     return t
 
 # IBM model 1
 def model1(source_corpus, foreign_corpus, t):
-    source = file(source_corpus, "r")
-    foreign = file(foreign_corpus, "r")
     count = defaultdict(int)
     count_e = defaultdict(int)
-    f_line = foreign.readline().strip()
-    e_line = source.readline().strip()
-    while e_line:
+    for e_line, f_line in izip(open(source_corpus), open(foreign_corpus)):
         # Go over words in f, e
-        for f in list(f_line.split(" ")):
+        for f in list(f_line.strip().split(" ")):
             # include NULL for possible source alignments
-            e_list = list(e_line.split(" "))
+            e_list = list(e_line.strip().split(" "))
             e_list.append('NULL')
             # Calculate sum first
             sum_e = 0
@@ -58,24 +49,14 @@ def model1(source_corpus, foreign_corpus, t):
                 # Update rule
                 count[(f,e)] += (t[e][f] / float(sum_e))
                 count_e[e] += (t[e][f] / float(sum_e))
-        f_line = foreign.readline().strip()
-        e_line = source.readline().strip()
-    source.seek(0)
-    foreign.seek(0)
-    f_line = foreign.readline().strip()
-    e_line = source.readline().strip()
     # Update t values
-    while e_line:
-        f_set = set(f_line.split(" "))
-        e_set = set(e_line.split(" "))
+    for e_line, f_line in izip(open(source_corpus), open(foreign_corpus)):
+        f_set = set(f_line.strip().split(" "))
+        e_set = set(e_line.strip().split(" "))
         e_set.add("NULL")
         for f in f_set:
             for e in e_set:
                 t[e][f] = float(count[(f,e)]) / float(count_e[e])
-        f_line = foreign.readline().strip()
-        e_line = source.readline().strip()
-    source.close()
-    foreign.close()
     return t
 
 def main():
