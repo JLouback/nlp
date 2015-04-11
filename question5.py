@@ -70,7 +70,7 @@ def main():
     #Read in corpus, initialize t(f|e) with 5 iterations of the EM algorithm for IBM model 1
     t = init_params(sys.argv[1],sys.argv[2])
     #Run  5 iterations of the EM algorithm for IBM model 1
-    for i in range(0,1):
+    for i in range(0,3):
         t,q = model2(sys.argv[1],sys.argv[2],t)
     #Find alignments for the first 20 sentence pairs in the training data
     source = file(sys.argv[1], "r")
