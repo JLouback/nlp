@@ -1,3 +1,4 @@
+from __future__ import print_function
 __author__="Juliana Louback <jl4354@.columbia.edu>"
 
 import sys
@@ -9,7 +10,11 @@ from itertools import izip
 
 """
 Usage:
-python question4.py corpus.en corpus.de devwords.txt > q4_output
+python question4.py n
+
+The parameter n indicates how many iterations of IBM model 1 should be run.
+The t-values obtained for the words in devwords.txt will be saved to the file tvalues.txt
+The alignments for the first 20 sentences will be saved to the file q4_output
 
 Question 4:  Initialize t(f|e) values with uniform distribution, run
 5 iterations of the EM algorithm for IBM model 1
@@ -55,26 +60,22 @@ def model1(source_corpus, foreign_corpus, t, n):
             t[e][f] = float(count[(f,e)]) / float(count_e[e])
     return t
 
-def main():
-    start_time = time.time()
-    #Read in corpus, initialize t(f|e) for each unique English word-foreign word combo
-    t = init_t(sys.argv[1],sys.argv[2])
-    #Run  5 iterations of the EM algorithm for IBM model 1
-    model1(sys.argv[1],sys.argv[2],t,5)
-
-    #For each English word e in devwords.txt, print the 10 foreign words with the highest t(f|e) and the value.
-    devwords = file(sys.argv[3],"r")
+#For each English word e in devwords.txt, print the 10 foreign words with the highest t(f|e) and the value.
+def model1_tvalues(t):
+    devwords = open("devwords.txt","r")
+    tvalues = open("tvalues.txt", "w")
     word = devwords.readline().strip()
     while word:
-        print(word)
-        print(sorted(t[word].items(), key=lambda x:x[1], reverse=True)[0:10])
-        print("")
+        print(word, file=tvalues)
+        print(sorted(t[word].items(), key=lambda x:x[1], reverse=True)[0:10], file=tvalues)
+        print("", file=tvalues)
         word = devwords.readline().strip()
 
-    #Find alignments for the first 20 sentence pairs in the training data
-    source = file(sys.argv[1], "r")
-    foreign = file(sys.argv[2], "r")
-
+#Find alignments for the first 20 sentence pairs in the training data, save to output file
+def model1_alignments(t):
+    source = open("corpus.en", "r")
+    foreign = open("corpus.de", "r")
+    q4 = open("q4_output", "w")
     for j in range(0,20):
         line_e = source.readline().strip()
         line_f = foreign.readline().strip()
@@ -92,13 +93,25 @@ def main():
                 probability = t["NULL"][line_f.split(" ")[f]]
                 alignment = 0
             alignments.append(alignment)
-        print(line_e)
-        print(line_f)
-        print(alignments)
-        print("")
-
+        print(line_e, file=q4)
+        print(line_f, file=q4)
+        print(alignments, file=q4)
+        print("", file=q4)
     source.close()
     foreign.close()
+    q4.close()
+
+def main():
+    start_time = time.time()
+    n = int(sys.argv[1])
+    #Read in corpus, initialize t(f|e) for each unique English word-foreign word combo
+    t = init_t("corpus.en","corpus.de")
+    #Run  5 iterations of the EM algorithm for IBM model 1
+    model1("corpus.en","corpus.de",t,n)
+    #Print t values for words in devwords.txt
+    model1_tvalues(t)
+    #Find alignments for the first 20 sentence pairs in the training data, save to output
+    model1_alignments(t)
     logging.warning("--- %s seconds ---" % (time.time() - start_time))
 
 if __name__ == '__main__':     # if the function is the main function ...
