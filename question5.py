@@ -1,3 +1,4 @@
+from __future__ import print_function
 __author__="Juliana Louback <jl4354@.columbia.edu>"
 
 import sys
@@ -10,7 +11,10 @@ from itertools import izip
 
 """
 Usage:
-python question5.py corpus.en corpus.de > q5_output
+python question5.py n
+
+The parameter n indicates how many iterations of IBM model 1 and 2 should be run.
+The alignments for the first 20 sentences will be saved to the file q5_output
 
 Question 5:  Initialize t(f|e) values with 5 iterations of IBM model 1
 (see question4.py) and q(j|i, l, m) with 1/l+1. Run 5 rounds of IBM model 2
@@ -18,11 +22,11 @@ Question 5:  Initialize t(f|e) values with 5 iterations of IBM model 1
 """
 
 # t(f|e) values with 5 iterations of IBM model 1. The q(j|i,l,m) initialization is done in model2
-def init_params(source_corpus, foreign_corpus):
+def init_params(source_corpus, foreign_corpus, n):
     # Start with uniform distribution
     t = init_t(source_corpus, foreign_corpus)
-    # Run  5 iterations of the EM algorithm for IBM model 1
-    t = model1(source_corpus, foreign_corpus, t, 5)
+    # Run n iterations of the EM algorithm for IBM model 1
+    t = model1(source_corpus, foreign_corpus, t, n)
     return t
 
 # IBM model 2
@@ -59,15 +63,11 @@ def model2(source_corpus, foreign_corpus, t, n):
             q[(j,i,l,m)] = float(c[(j,i,l,m)]) / float(c_ilm[(i,l,m)])
     return t,q
 
-def main():
-    start_time = time.time()
-    #Read in corpus, initialize t(f|e) with 5 iterations of the EM algorithm for IBM model 1
-    t = init_params(sys.argv[1],sys.argv[2])
-    #Run  5 iterations of the EM algorithm for IBM model 1
-    t,q = model2(sys.argv[1],sys.argv[2],t,3)
+def model2_alignments(t, q):
     #Find alignments for the first 20 sentence pairs in the training data
-    source = file(sys.argv[1], "r")
-    foreign = file(sys.argv[2], "r")
+    source = open("corpus.en", "r")
+    foreign = open("corpus.de", "r")
+    q5 = open("q5_output", "w")
     for k in range(0,20):
         e_line = source.readline().strip()
         line = e_line
@@ -88,13 +88,23 @@ def main():
                     probability = p
                     alignment = j
             alignments.append(alignment)
-        print(line)
-        print(f_line)
-        print(alignments)
-        print("")
-
+        print(line, file=q5)
+        print(f_line, file=q5)
+        print(alignments, file=q5)
+        print("", file=q5)
     source.close()
     foreign.close()
+    q5.close()
+
+def main():
+    start_time = time.time()
+    n = int(sys.argv[1])
+    #Read in corpus, initialize t(f|e) with n iterations of the EM algorithm for IBM model 1
+    t = init_params("corpus.en","corpus.de",n)
+    #Run n iterations of the EM algorithm for IBM model 2
+    t,q = model2("corpus.en","corpus.de",t,n)
+    #Find alignments for the first 20 sentence pairs in the training data
+    model2_alignments(t,q)
     logging.warning("--- %s seconds ---" % (time.time() - start_time))
 
 if __name__ == '__main__':
