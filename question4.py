@@ -33,7 +33,6 @@ def init_t(source_corpus, foreign_corpus):
 
 # IBM model 1
 def model1(source_corpus, foreign_corpus, t, n):
-    #Initialize t(f|e) values with uniform distribution
     for s in range(0, n):
         count = defaultdict(int)
         count_e = defaultdict(int)
