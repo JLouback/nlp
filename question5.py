@@ -22,47 +22,41 @@ def init_params(source_corpus, foreign_corpus):
     # Start with uniform distribution
     t = init_t(source_corpus, foreign_corpus)
     # Run  5 iterations of the EM algorithm for IBM model 1
-    for i in range(0,5):
-        t = model1(source_corpus, foreign_corpus, t)
+    t = model1(source_corpus, foreign_corpus, t, 5)
     return t
 
 # IBM model 2
-def model2(source_corpus, foreign_corpus, t):
-    c_fe = defaultdict(int);c_e = defaultdict(int);c_ilm = defaultdict(int)
-    c = defaultdict(int);q = defaultdict(int)
-    for e_line, f_line in izip(open(source_corpus), open(foreign_corpus)):
-        m = len(f_line.strip().split(" "))
-        l = len(e_line.strip().split(" "))
-        e_line = "NULL " + e_line
-        # Go over words in e, f
-        for i in range(1, m+1):
-            f = f_line.strip().split(" ")[i-1]
-            # Calculate the delta denominator, set default values for  q(j|i,l,m)
-            delta_d = 0
-            for j in range(0, l+1):
-                e = e_line.strip().split(" ")[j]
-                if (j,i,l,m) not in q:
-                    q[(j,i,l,m)] = 1/float(l+1)
-                delta_d += q[(j,i,l,m)] * t[e][f]
-            for j in range(0, l+1):
-                e = e_line.strip().split(" ")[j]
-                # Update rule
-                delta = (q[(j,i,l,m)] * t[e][f])/float(delta_d)
-                c_fe[(f,e)] += delta
-                c_e[e]+= delta
-                c_ilm[(i,l,m)] += delta
-                c[(j,i,l,m)] += delta
-    for e_line, f_line in izip(open(source_corpus), open(foreign_corpus)):
-        m = len(f_line.strip().split(" "))
-        l = len(e_line.strip().split(" "))
-        e_line = "NULL " + e_line
-        # Go over words in e, f
-        for i in range(1, m+1):
-            f = f_line.strip().split(" ")[i-1]
-            for j in range(0, l+1):
-                e = e_line.strip().split(" ")[j]
-                t[e][f] = float(c_fe[(f,e)]) / float(c_e[e])
-                q[(j,i,l,m)] = float(c[(j,i,l,m)]) / float(c_ilm[(i,l,m)])
+def model2(source_corpus, foreign_corpus, t, n):
+    for s in range(0, n):
+        c_fe = defaultdict(int);c_e = defaultdict(int);c_ilm = defaultdict(int)
+        c = defaultdict(int);q = defaultdict(int)
+        for e_line, f_line in izip(open(source_corpus), open(foreign_corpus)):
+            m = len(f_line.strip().split(" "))
+            l = len(e_line.strip().split(" "))
+            e_line = "NULL " + e_line
+            # Go over words in e, f
+            for i in range(1, m+1):
+                f = f_line.strip().split(" ")[i-1]
+                # Calculate the delta denominator, set default values for  q(j|i,l,m)
+                delta_d = 0
+                for j in range(0, l+1):
+                    e = e_line.strip().split(" ")[j]
+                    if (j,i,l,m) not in q:
+                        q[(j,i,l,m)] = 1/float(l+1)
+                    delta_d += q[(j,i,l,m)] * t[e][f]
+                for j in range(0, l+1):
+                    e = e_line.strip().split(" ")[j]
+                    # Update rule
+                    delta = (q[(j,i,l,m)] * t[e][f])/float(delta_d)
+                    c_fe[(f,e)] += delta
+                    c_e[e]+= delta
+                    c_ilm[(i,l,m)] += delta
+                    c[(j,i,l,m)] += delta
+        # Update t values
+        for (f,e) in c_fe.keys():
+            t[e][f] = float(c_fe[(f,e)]) / float(c_e[e])
+        for (j,i,l,m) in c.keys():
+            q[(j,i,l,m)] = float(c[(j,i,l,m)]) / float(c_ilm[(i,l,m)])
     return t,q
 
 def main():
@@ -70,8 +64,7 @@ def main():
     #Read in corpus, initialize t(f|e) with 5 iterations of the EM algorithm for IBM model 1
     t = init_params(sys.argv[1],sys.argv[2])
     #Run  5 iterations of the EM algorithm for IBM model 1
-    for i in range(0,3):
-        t,q = model2(sys.argv[1],sys.argv[2],t)
+    t,q = model2(sys.argv[1],sys.argv[2],t,3)
     #Find alignments for the first 20 sentence pairs in the training data
     source = file(sys.argv[1], "r")
     foreign = file(sys.argv[2], "r")
