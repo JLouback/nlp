@@ -66,9 +66,7 @@ def main():
     devwords = file(sys.argv[3],"r")
     word = devwords.readline().strip()
     while word:
-        print("English word: "),
         print(word)
-        print("Top 10 foreign words:"),
         print(sorted(t[word].items(), key=lambda x:x[1], reverse=True)[0:10])
         print("")
         word = devwords.readline().strip()
