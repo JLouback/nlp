@@ -32,31 +32,28 @@ def init_t(source_corpus, foreign_corpus):
     return t
 
 # IBM model 1
-def model1(source_corpus, foreign_corpus, t):
-    count = defaultdict(int)
-    count_e = defaultdict(int)
-    for e_line, f_line in izip(open(source_corpus), open(foreign_corpus)):
-        # Go over words in f, e
-        for f in list(f_line.strip().split(" ")):
-            # include NULL for possible source alignments
-            e_list = list(e_line.strip().split(" "))
-            e_list.append('NULL')
-            # Calculate sum first
-            sum_e = 0
-            for e in e_list:
-                sum_e += t[e][f]
-            for e in e_list:
-                # Update rule
-                count[(f,e)] += (t[e][f] / float(sum_e))
-                count_e[e] += (t[e][f] / float(sum_e))
-    # Update t values
-    for e_line, f_line in izip(open(source_corpus), open(foreign_corpus)):
-        f_set = set(f_line.strip().split(" "))
-        e_set = set(e_line.strip().split(" "))
-        e_set.add("NULL")
-        for f in f_set:
-            for e in e_set:
-                t[e][f] = float(count[(f,e)]) / float(count_e[e])
+def model1(source_corpus, foreign_corpus, t, n):
+    #Initialize t(f|e) values with uniform distribution
+    for s in range(0, n):
+        count = defaultdict(int)
+        count_e = defaultdict(int)
+        for e_line, f_line in izip(open(source_corpus), open(foreign_corpus)):
+            # Go over words in f, e
+            for f in list(f_line.strip().split(" ")):
+                # include NULL for possible source alignments
+                e_list = list(e_line.strip().split(" "))
+                e_list.append('NULL')
+                # Calculate sum first
+                sum_e = 0
+                for e in e_list:
+                    sum_e += t[e][f]
+                for e in e_list:
+                    # Update rule
+                    count[(f,e)] += (t[e][f] / float(sum_e))
+                    count_e[e] += (t[e][f] / float(sum_e))
+        # Update t values
+        for (f,e) in count.keys():
+            t[e][f] = float(count[(f,e)]) / float(count_e[e])
     return t
 
 def main():
@@ -64,8 +61,7 @@ def main():
     #Read in corpus, initialize t(f|e) for each unique English word-foreign word combo
     t = init_t(sys.argv[1],sys.argv[2])
     #Run  5 iterations of the EM algorithm for IBM model 1
-    for i in range(0,5):
-        t = model1(sys.argv[1],sys.argv[2],t)
+    model1(sys.argv[1],sys.argv[2],t,5)
 
     #For each English word e in devwords.txt, print the 10 foreign words with the highest t(f|e) and the value.
     devwords = file(sys.argv[3],"r")
