@@ -40,7 +40,7 @@ def unscramble(source_corpus, foreign_corpus, t, q):
                 word_prob = 0
                 for j in range(0, l+1):
                     e = e_line_null.strip().split(" ")[j]
-                    qt = q.get((j,i,l,m),0.0000001) * t[e].get(f,0.0000001)
+                    qt = q.get((j,i,l,m),0.00000001) * t[e].get(f,0.00000001)
                     word_prob = max(word_prob, qt)
                 temp_prob += math.log(word_prob)
             if probability < temp_prob:
