@@ -1,9 +1,10 @@
-# nlp
+# NLP - Machine Translation with IBM Model 1 and 2
+
 Code for assignments from prof. Michael Collin's NLP course, COMSW4705 Spring 2015 at Columbia U.
 
-The code for individual questions is in the files question4.py, question5.py, question6.py
+The code for each phase is in the files question4.py, question5.py, question6.py
 
-Since they build on each other (q5 uses t values obtained in q4; q6 uses t and q values from q5), I run them all sequentially in questions.py. I did this to facilitate correction - if TAs divide corrections by questions or students
+Since they build on each other (q5 uses t values obtained in q4; q6 uses t and q values from q5), I run them all sequentially in questions.py. I did this to facilitate comprehension.
 
 ============================================================
 Q4, Q5, Q6 (Runtime for n=3 is ~6 minutes)
